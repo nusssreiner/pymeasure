@@ -25,6 +25,7 @@
 import logging
 
 import pyvisa
+from pyvisa import ResourceManager
 
 from .adapter import Adapter
 from .protocol import ProtocolAdapter
@@ -42,8 +43,12 @@ class VISAAdapter(Adapter):
     :param resource_name: A
         `VISA resource string <https://pyvisa.readthedocs.io/en/latest/introduction/names.html>`__
         or GPIB address integer that identifies the target of the connection
-    :param visa_library: PyVISA VisaLibrary Instance, path of the VISA library or VisaLibrary spec
-        string (``@py`` or ``@ivi``). If not given, the default for the platform will be used.
+    :param visa_library: PyVISA VisaLibrary Instance, an existing
+        :class:`pyvisa.ResourceManager`, a path of the VISA library, or a
+        VisaLibrary spec string (``@py`` or ``@ivi``). If not given, the
+        default for the platform will be used. Passing an already existing
+        :class:`pyvisa.ResourceManager` allows several instruments to share a
+        single resource manager instead of each creating its own.
     :param log: Parent logger of the 'Adapter' logger.
     :param \\**kwargs: Keyword arguments for configuring the PyVISA connection.
 
@@ -87,7 +92,10 @@ class VISAAdapter(Adapter):
             resource_name = "GPIB0::%d::INSTR" % resource_name
 
         self.resource_name = resource_name
-        self.manager = pyvisa.ResourceManager(visa_library)
+        if isinstance(visa_library, ResourceManager):
+            self.manager = visa_library
+        else:
+            self.manager = pyvisa.ResourceManager(visa_library)
 
         # Clean up kwargs considering the interface type matching resource_name
         if_type = self.manager.resource_info(self.resource_name).interface_type
