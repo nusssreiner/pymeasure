@@ -100,6 +100,51 @@ class SCPIMixin:
                 break
         return errors
 
+    def close(self):
+        """Close the underlying VISA connection."""
+        self.adapter.close()
+
+    def open(self):
+        """Reopen the underlying VISA connection."""
+        self.adapter.open()
+
+    def shutdown(self):
+        """Bring the instrument to a safe and stable state."""
+        self.isShutdown = True
+        log.info("Shutting down %s" % self.name)
+
+    def get_device_info(self):
+        """Query ``*IDN?`` and populate identity attributes.
+
+        Splits the response into ``vendor``, ``name``, ``serial_number`` and
+        ``firmware_ref`` and stores them on the instrument. Note that
+        ``self.name`` is overwritten with the model designation reported by
+        the device.
+        """
+        resp_str = self.id
+        vendor, name, serial_number, firmware_ref = resp_str.split(",")
+        self.vendor = vendor
+        self.name = name
+        self.serial_number = serial_number
+        self.firmware_ref = firmware_ref
+
+    def check_is_dev_supported(self, instr_list, errMsg):
+        """Check whether the connected instrument is in ``instr_list``.
+
+        :param instr_list: Iterable of supported model name substrings, or ``None``
+            to skip the check.
+        :param errMsg: Message appended to ``self.name`` when raising.
+        :raises AssertionError: If no connection has been opened (``self.name`` is
+            ``None``) or the instrument is not in ``instr_list``.
+        """
+        if self.name is None:
+            raise AssertionError("Instrument connection not opened!")
+
+        if instr_list is not None:
+            if not (any(self.name in instr for instr in instr_list)):
+                self.close()
+                raise AssertionError(self.name + errMsg)
+
 
 class SCPIUnknownMixin(SCPIMixin):
     """Mixin which adds SCPI commands to an instrument from which it is not known whether it
