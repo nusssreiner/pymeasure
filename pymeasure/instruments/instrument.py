@@ -26,6 +26,8 @@ import logging
 import time
 from warnings import warn
 
+from pyvisa import ResourceManager
+
 from .common_base import CommonBase
 from ..adapters.visa import VISAAdapter
 
@@ -47,6 +49,10 @@ class Instrument(CommonBase):
     defining the target of your connection.
 
     When ``adapter`` is an integer, a GPIB resource name is created based on that.
+    When ``adapter`` is a :class:`pyvisa.ResourceManager`, a
+    :py:class:`~pymeasure.adapters.VISAAdapter` is constructed that reuses this
+    resource manager; in that case ``name`` is interpreted as the VISA resource
+    name for the connection.
     In either case a :py:class:`~pymeasure.adapters.VISAAdapter` is constructed based on that
     resource name.
     Keyword arguments can be used to further configure the connection.
@@ -74,12 +80,14 @@ class Instrument(CommonBase):
     def __init__(self, adapter, name, includeSCPI=None,
                  **kwargs):
         # Setup communication before possible children require the adapter.
-        if isinstance(adapter, (int, str)):
-            try:
+        try:
+            if isinstance(adapter, ResourceManager):
+                adapter = VISAAdapter(name, adapter, **kwargs)
+            elif isinstance(adapter, (int, str)):
                 adapter = VISAAdapter(adapter, **kwargs)
-            except ImportError:
-                raise Exception("Invalid Adapter provided for Instrument since"
-                                " PyVISA is not present")
+        except ImportError:
+            raise Exception("Invalid Adapter provided for Instrument since"
+                            " PyVISA is not present")
         self.adapter = adapter
         if includeSCPI is True:
             warn("Defining SCPI base functionality with `includeSCPI=True` is deprecated, inherit "
@@ -91,6 +99,10 @@ class Instrument(CommonBase):
         self.SCPI = includeSCPI
         self.isShutdown = False
         self.name = name
+        self.resource_name = name
+        self.vendor = ""
+        self.serial_number = ""
+        self.firmware_ref = ""
 
         super().__init__()
 
