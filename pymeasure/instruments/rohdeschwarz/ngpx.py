@@ -75,7 +75,7 @@ class PwrChannel(Channel):
     _output = Instrument.control(
         "OUTP? (@{ch})",
         "OUTP %d,(@{ch})",
-        """Individual output state for this channel (``True``=ON, ``False``=OFF).""",
+        """Individual output state for this channel (``True`` = ON, ``False`` = OFF).""",
         validator=strict_discrete_set,
         values={True: 1, False: 0},
         map_values=True,
@@ -130,7 +130,7 @@ class PwrChannel(Channel):
     safety_limits_ena = Instrument.control(
         "ALIM? (@{ch})",
         "ALIM %d,(@{ch})",
-        """Control the safety-limit state (``True``=enabled, ``False``=disabled).""",
+        """Control the safety-limit state (``True`` = enabled, ``False`` = disabled).""",
         validator=strict_discrete_set,
         values={True: 1, False: 0},
         map_values=True,
@@ -228,7 +228,7 @@ class PwrChannel(Channel):
 
     ovp_tripped = Instrument.measurement(
         "VOLT:PROT:TRIP? (@{ch})",
-        """Measure whether OVP has tripped (``True``=tripped, ``False``=normal).
+        """Measure whether OVP has tripped (``True`` = tripped, ``False`` = normal).
 
         Returns ``True`` if an overvoltage event occurred and the output is
         shut down. Use :meth:`ovp_clear` to reset after fixing the cause.
@@ -244,7 +244,7 @@ class PwrChannel(Channel):
         "FUSE? (@{ch})",
         "FUSE %d,(@{ch})",
         """Control the Overcurrent-Protection (OCP / fuse) state
-        (``True``=enabled, ``False``=disabled).""",
+        (``True`` = enabled, ``False`` = disabled).""",
         validator=strict_discrete_set,
         values={True: 1, False: 0},
         map_values=True,
