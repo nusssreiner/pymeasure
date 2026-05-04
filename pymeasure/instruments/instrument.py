@@ -101,9 +101,11 @@ class Instrument(CommonBase):
         self.isShutdown = False
         self.name = name
         self.resource_name = getattr(self.adapter, "resource_name", name)
-        self.vendor = ""
-        self.serial_number = ""
-        self.firmware_ref = ""
+        # Only seed the identity fields on subclasses that don't already
+        # define them as (read-only) properties of their own.
+        for _attr in ("vendor", "serial_number", "firmware_ref"):
+            if not hasattr(type(self), _attr):
+                setattr(self, _attr, "")
 
         super().__init__()
 
