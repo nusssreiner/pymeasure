@@ -85,9 +85,10 @@ class Instrument(CommonBase):
                 adapter = VISAAdapter(name, adapter, **kwargs)
             elif isinstance(adapter, (int, str)):
                 adapter = VISAAdapter(adapter, **kwargs)
-        except ImportError:
-            raise Exception("Invalid Adapter provided for Instrument since"
-                            " PyVISA is not present")
+        except ImportError as err:
+            raise Exception(
+                "Invalid Adapter provided for Instrument since PyVISA is not present"
+            ) from err
         self.adapter = adapter
         if includeSCPI is True:
             warn("Defining SCPI base functionality with `includeSCPI=True` is deprecated, inherit "
@@ -99,7 +100,7 @@ class Instrument(CommonBase):
         self.SCPI = includeSCPI
         self.isShutdown = False
         self.name = name
-        self.resource_name = name
+        self.resource_name = getattr(self.adapter, "resource_name", name)
         self.vendor = ""
         self.serial_number = ""
         self.firmware_ref = ""
