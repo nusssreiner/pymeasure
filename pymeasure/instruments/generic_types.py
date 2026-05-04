@@ -120,28 +120,35 @@ class SCPIMixin:
         ``firmware_ref`` and stores them on the instrument. Note that
         ``self.name`` is overwritten with the model designation reported by
         the device.
+
+        :raises ValueError: If the ``*IDN?`` response does not contain four
+            comma-separated fields.
         """
         resp_str = self.id
-        vendor, name, serial_number, firmware_ref = resp_str.split(",")
-        self.vendor = vendor
-        self.name = name
-        self.serial_number = serial_number
-        self.firmware_ref = firmware_ref
+        parts = [p.strip() for p in resp_str.split(",", 3)]
+        if len(parts) != 4:
+            raise ValueError(f"Unexpected *IDN? response format: {resp_str!r}")
+        self.vendor, self.name, self.serial_number, self.firmware_ref = parts
 
     def check_is_dev_supported(self, instr_list, errMsg):
         """Check whether the connected instrument is in ``instr_list``.
 
-        :param instr_list: Iterable of supported model name substrings, or ``None``
-            to skip the check.
+        Each token in ``instr_list`` is treated as a model-name substring and
+        is searched for in the device name reported by the instrument
+        (typically the model field of ``*IDN?``).
+
+        :param instr_list: Iterable of supported model-name substrings, or
+            ``None`` to skip the check.
         :param errMsg: Message appended to ``self.name`` when raising.
-        :raises AssertionError: If no connection has been opened (``self.name`` is
-            ``None``) or the instrument is not in ``instr_list``.
+        :raises AssertionError: If no connection has been opened
+            (``self.name`` is ``None``) or none of the supported tokens is a
+            substring of the connected device name.
         """
         if self.name is None:
             raise AssertionError("Instrument connection not opened!")
 
         if instr_list is not None:
-            if not (any(self.name in instr for instr in instr_list)):
+            if not any(model in self.name for model in instr_list):
                 self.close()
                 raise AssertionError(self.name + errMsg)
 
